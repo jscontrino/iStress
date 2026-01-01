@@ -118,4 +118,3 @@ fn run_stress_test(cli: &Cli) -> Result<(), String> {
 
     Ok(())
 }
-

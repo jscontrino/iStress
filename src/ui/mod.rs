@@ -97,9 +97,10 @@ impl MetricsHistory {
     }
 
     pub fn get_cpu_temp_peak(&self) -> Option<f64> {
-        self.cpu_temps.iter().copied().fold(None, |max, val| {
-            Some(max.map_or(val, |m| f64::max(m, val)))
-        })
+        self.cpu_temps
+            .iter()
+            .copied()
+            .fold(None, |max, val| Some(max.map_or(val, |m| f64::max(m, val))))
     }
 
     pub fn get_cpu_temp_average(&self) -> Option<f64> {
@@ -112,9 +113,10 @@ impl MetricsHistory {
     }
 
     pub fn get_gpu_temp_peak(&self) -> Option<f64> {
-        self.gpu_temps.iter().copied().fold(None, |max, val| {
-            Some(max.map_or(val, |m| f64::max(m, val)))
-        })
+        self.gpu_temps
+            .iter()
+            .copied()
+            .fold(None, |max, val| Some(max.map_or(val, |m| f64::max(m, val))))
     }
 
     pub fn get_gpu_temp_average(&self) -> Option<f64> {
@@ -208,11 +210,11 @@ impl StressTestUI {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // Header
-                Constraint::Min(10),     // Graphs
-                Constraint::Length(4),   // System Metrics (NEW)
-                Constraint::Length(4),   // CPU Stats
-                Constraint::Length(4),   // GPU Stats
+                Constraint::Length(3), // Header
+                Constraint::Min(10),   // Graphs
+                Constraint::Length(4), // System Metrics (NEW)
+                Constraint::Length(4), // CPU Stats
+                Constraint::Length(4), // GPU Stats
             ])
             .split(f.area());
 
@@ -233,14 +235,12 @@ impl StressTestUI {
             "GPU Stress Test"
         };
 
-        let header = Paragraph::new(vec![Line::from(vec![
-            Span::styled(
-                format!("{} | {} | Press 'q' to quit", status, now),
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ])])
+        let header = Paragraph::new(vec![Line::from(vec![Span::styled(
+            format!("{} | {} | Press 'q' to quit", status, now),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )])])
         .block(Block::default().borders(Borders::ALL).title("iStress"));
 
         f.render_widget(header, area);
@@ -263,10 +263,7 @@ impl StressTestUI {
                 .style(Style::default().fg(Color::Red))
                 .data(&cpu_data);
 
-            let max_temp = cpu_data
-                .iter()
-                .map(|(_, y)| *y)
-                .fold(0.0f64, f64::max);
+            let max_temp = cpu_data.iter().map(|(_, y)| *y).fold(0.0f64, f64::max);
 
             let (y_min, y_max, temp_labels) = MetricsHistory::calculate_nice_temp_scale(max_temp);
 
@@ -315,10 +312,7 @@ impl StressTestUI {
                 .style(Style::default().fg(Color::Cyan))
                 .data(&gpu_data);
 
-            let max_temp = gpu_data
-                .iter()
-                .map(|(_, y)| *y)
-                .fold(0.0f64, f64::max);
+            let max_temp = gpu_data.iter().map(|(_, y)| *y).fold(0.0f64, f64::max);
 
             let (y_min, y_max, temp_labels) = MetricsHistory::calculate_nice_temp_scale(max_temp);
 
@@ -370,13 +364,12 @@ impl StressTestUI {
             .map(|u| format!("{:.1}%", u))
             .unwrap_or_else(|| "N/A".to_string());
 
-        let memory_str = if let (Some(used), Some(total)) =
-            (metrics.memory_used_gb, metrics.memory_total_gb)
-        {
-            format!("{:.1}/{:.1} GB", used, total)
-        } else {
-            "N/A".to_string()
-        };
+        let memory_str =
+            if let (Some(used), Some(total)) = (metrics.memory_used_gb, metrics.memory_total_gb) {
+                format!("{:.1}/{:.1} GB", used, total)
+            } else {
+                "N/A".to_string()
+            };
 
         let throttle_indicator = |throttled: Option<bool>| -> (String, Color) {
             match throttled {
@@ -532,10 +525,27 @@ impl StressTestUI {
 
         report.push_str("Test Configuration:\n");
         report.push_str("───────────────────────────────────────────────────────────\n");
-        report.push_str(&format!("  Duration: {:.1} seconds ({:.1} minutes)\n",
-            actual_duration_secs, actual_duration_secs / 60.0));
-        report.push_str(&format!("  CPU Test: {}\n", if self.cpu_active { "Enabled" } else { "Disabled" }));
-        report.push_str(&format!("  GPU Test: {}\n\n", if self.gpu_active { "Enabled" } else { "Disabled" }));
+        report.push_str(&format!(
+            "  Duration: {:.1} seconds ({:.1} minutes)\n",
+            actual_duration_secs,
+            actual_duration_secs / 60.0
+        ));
+        report.push_str(&format!(
+            "  CPU Test: {}\n",
+            if self.cpu_active {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
+        ));
+        report.push_str(&format!(
+            "  GPU Test: {}\n\n",
+            if self.gpu_active {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
+        ));
 
         if self.cpu_active {
             report.push_str("CPU Statistics:\n");
@@ -558,8 +568,10 @@ impl StressTestUI {
             }
             report.push_str(&format!("  Primes Found: {}\n", self.cpu_primes));
             if actual_duration_secs > 0.0 {
-                report.push_str(&format!("  Primes/Second: {:.0}\n",
-                    self.cpu_primes as f64 / actual_duration_secs));
+                report.push_str(&format!(
+                    "  Primes/Second: {:.0}\n",
+                    self.cpu_primes as f64 / actual_duration_secs
+                ));
             }
 
             match self.current_metrics.cpu_throttled {
@@ -594,8 +606,10 @@ impl StressTestUI {
             }
             report.push_str(&format!("  GPU Iterations: {}\n", self.gpu_iterations));
             if actual_duration_secs > 0.0 {
-                report.push_str(&format!("  Iterations/Second: {:.0}\n",
-                    self.gpu_iterations as f64 / actual_duration_secs));
+                report.push_str(&format!(
+                    "  Iterations/Second: {:.0}\n",
+                    self.gpu_iterations as f64 / actual_duration_secs
+                ));
             }
 
             match self.current_metrics.gpu_throttled {
@@ -608,9 +622,16 @@ impl StressTestUI {
 
         report.push_str("System Statistics:\n");
         report.push_str("───────────────────────────────────────────────────────────\n");
-        if let (Some(used), Some(total)) = (self.current_metrics.memory_used_gb, self.current_metrics.memory_total_gb) {
-            report.push_str(&format!("  Memory Used: {:.1}/{:.1} GB ({:.1}%)\n",
-                used, total, (used / total) * 100.0));
+        if let (Some(used), Some(total)) = (
+            self.current_metrics.memory_used_gb,
+            self.current_metrics.memory_total_gb,
+        ) {
+            report.push_str(&format!(
+                "  Memory Used: {:.1}/{:.1} GB ({:.1}%)\n",
+                used,
+                total,
+                (used / total) * 100.0
+            ));
         }
 
         report.push('\n');

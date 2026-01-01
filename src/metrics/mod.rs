@@ -137,7 +137,8 @@ impl IOKitMetricsCollector {
                 }
             }
 
-            let used_bytes = (pages_active + pages_wired + pages_compressed) as f64 * MACOS_PAGE_SIZE_BYTES;
+            let used_bytes =
+                (pages_active + pages_wired + pages_compressed) as f64 * MACOS_PAGE_SIZE_BYTES;
             Some(used_bytes / BYTES_TO_GB_DIVISOR)
         } else {
             None
@@ -235,7 +236,9 @@ impl IOKitMetricsCollector {
                     *max_freq = current_freq;
                 }
 
-                if *max_freq > MIN_FREQUENCY_FOR_THROTTLE_DETECTION && elapsed > THROTTLE_DETECTION_SECONDS {
+                if *max_freq > MIN_FREQUENCY_FOR_THROTTLE_DETECTION
+                    && elapsed > THROTTLE_DETECTION_SECONDS
+                {
                     let threshold = *max_freq * THROTTLE_FREQUENCY_DROP_THRESHOLD;
                     if current_freq < threshold {
                         return Some(true);
@@ -307,7 +310,8 @@ impl MetricsCollector for IOKitMetricsCollector {
                 let service = IOServiceGetMatchingService(kIOMasterPortDefault, matching_dict);
 
                 if service != 0 {
-                    let cpu_temp = self.read_sensor_value(service, "TC0P")
+                    let cpu_temp = self
+                        .read_sensor_value(service, "TC0P")
                         .or_else(|| self.read_sensor_value(service, "TC0D"))
                         .or_else(|| self.read_sensor_value(service, "TC0E"))
                         .or_else(|| self.read_sensor_value(service, "TC0F"))
@@ -326,7 +330,8 @@ impl MetricsCollector for IOKitMetricsCollector {
                         metrics.cpu_temperature = Some(temp);
                     }
 
-                    let gpu_temp = self.read_sensor_value(service, "TG0P")
+                    let gpu_temp = self
+                        .read_sensor_value(service, "TG0P")
                         .or_else(|| self.read_sensor_value(service, "TG0D"))
                         .or_else(|| self.read_sensor_value(service, "TG0T"))
                         .or_else(|| self.read_sensor_value(service, "TGDD"))
@@ -336,7 +341,8 @@ impl MetricsCollector for IOKitMetricsCollector {
                         metrics.gpu_temperature = Some(temp);
                     }
 
-                    metrics.power_watts = self.read_sensor_value(service, "PSTR")
+                    metrics.power_watts = self
+                        .read_sensor_value(service, "PSTR")
                         .or_else(|| self.read_sensor_value(service, "PCPC"))
                         .or_else(|| self.read_sensor_value(service, "PCPG"))
                         .or_else(|| self.read_sensor_value(service, "PC0C"));
