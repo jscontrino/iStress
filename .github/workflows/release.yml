@@ -34,16 +34,7 @@ jobs:
   build-and-upload:
     name: Build and Upload
     needs: create-release
-    strategy:
-      matrix:
-        include:
-          - os: macos-13
-            target: x86_64-apple-darwin
-            name: istress-x86_64-apple-darwin
-          - os: macos-14
-            target: aarch64-apple-darwin
-            name: istress-aarch64-apple-darwin
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +42,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: aarch64-apple-darwin
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -69,22 +60,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target
-          key: ${{ runner.os }}-target-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-target-aarch64-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests
-        run: cargo test --target ${{ matrix.target }}
+        run: cargo test --target aarch64-apple-darwin
 
       - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target aarch64-apple-darwin
 
       - name: Strip binary
-        run: strip target/${{ matrix.target }}/release/istress
+        run: strip target/aarch64-apple-darwin/release/istress
 
       - name: Create archive
         run: |
-          cd target/${{ matrix.target }}/release
-          tar -czf ${{ matrix.name }}.tar.gz istress
-          mv ${{ matrix.name }}.tar.gz ../../..
+          cd target/aarch64-apple-darwin/release
+          tar -czf istress-aarch64-apple-darwin.tar.gz istress
+          mv istress-aarch64-apple-darwin.tar.gz ../../..
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -92,13 +83,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./${{ matrix.name }}.tar.gz
-          asset_name: ${{ matrix.name }}.tar.gz
+          asset_path: ./istress-aarch64-apple-darwin.tar.gz
+          asset_name: istress-aarch64-apple-darwin.tar.gz
           asset_content_type: application/gzip
 
       - name: Generate checksum
         run: |
-          shasum -a 256 ${{ matrix.name }}.tar.gz > ${{ matrix.name }}.tar.gz.sha256
+          shasum -a 256 istress-aarch64-apple-darwin.tar.gz > istress-aarch64-apple-darwin.tar.gz.sha256
 
       - name: Upload Checksum
         uses: actions/upload-release-asset@v1
@@ -106,6 +97,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./${{ matrix.name }}.tar.gz.sha256
-          asset_name: ${{ matrix.name }}.tar.gz.sha256
+          asset_path: ./istress-aarch64-apple-darwin.tar.gz.sha256
+          asset_name: istress-aarch64-apple-darwin.tar.gz.sha256
           asset_content_type: text/plain
